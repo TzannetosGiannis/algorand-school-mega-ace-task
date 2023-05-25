@@ -183,6 +183,11 @@ def accept_loan(borrower: abi.Account, axfer: abi.AssetTransferTransaction):
 
 
 @nft_as_collateral_app.external
+def calculate_interest(*, output: abi.Uint64):
+    return output.set(calculateInterest())
+
+
+@nft_as_collateral_app.external
 def liquidate_loan(address: abi.Account, asset: abi.Asset):
     return Seq(
         # check that the account we are going to liquidate is opted in the contract
@@ -223,7 +228,7 @@ if __name__ == "__main__":
     accounts = sandbox.kmd.get_accounts()
     sender = accounts[0]
     sender2 = accounts[1]
-    request_amount = 2
+    request_amount = 20000000
 
     algod_client = sandbox.get_algod_client()
 
@@ -269,7 +274,7 @@ if __name__ == "__main__":
         f"Info: Generated Asset {asa} at {tx_id} at {sender.address} with total supply 1"
     )
     # Create ASA lender
-    asa2_supply = 100000000
+    asa2_supply = 10000000000
     atc2 = AtomicTransactionComposer()
     asa_create_lender = TransactionWithSigner(
         txn=transaction.AssetCreateTxn(
@@ -320,7 +325,7 @@ if __name__ == "__main__":
     print()
     print(f"Step 3: borrower {sender.address} opts in the contract the asset {asa}")
     loan_duration = 100000000
-    interest = 1
+    interest = 5
     app_client.call(
         request_loan,
         request_token=asa2,  # fix this
@@ -395,9 +400,6 @@ if __name__ == "__main__":
     print(f"Info: lender {sender2.address} opts in for {asa} ASA")
     atc5.add_transaction(axfer)
     atc5_result = atc5.execute(sandbox.get_algod_client(), 3)
-
-    tx_id = atc5_result.tx_ids[0]
-    actual_round = atc5_result.confirmed_round
     axfer = TransactionWithSigner(
         txn=transaction.AssetTransferTxn(
             sender=sender2.address,
@@ -421,10 +423,12 @@ if __name__ == "__main__":
     print(
         f"Info: borrowers {sender.address} local storage {app_client.get_local_state(sender.address)}"
     )
-    caclulate_amount2 = algod_client.block_info(actual_round)["block"]["ts"]
-    # print(caclulate_amount2, caclulate_amount1, caclulate_amount2 - caclulate_amount1)
-    payed_interest = caclulate_amount2 - caclulate_amount1
-
+    return_value = app_client.call(
+        calculate_interest, sender=sender.address, signer=sender.signer
+    )
+    # x3 factor is just because time is relevant in locanet , or seems so
+    payed_interest = return_value.return_value * 3
+    print(f"Info: Accumulater interest {payed_interest}")
     axfer = TransactionWithSigner(
         txn=transaction.AssetTransferTxn(
             sender=sender.address,
@@ -448,33 +452,34 @@ if __name__ == "__main__":
         f"Info: after taken loan lender {sender2.address}", app_acct_info["assets"][-2:]
     )
 
-    action = "liquidate loan"
-    app_client.call(
-        liquidate_loan,
-        address=sender.address,
-        asset=asa,
-        signer=sender2.signer,
-        sender=sender2.address,
-        suggested_params=sp,
-    )
-    print()
-    print(
-        f"Step6: lender liquidates {sender2.address} and gets the collateral {asa} ASA"
-    )
-    # action = "repay loan"
+    # action = "liquidate loan"
     # app_client.call(
-    #     repay_loan,
-    #     axfer=axfer,
+    #     liquidate_loan,
+    #     address=sender.address,
     #     asset=asa,
-    #     signer=sender.signer,
-    #     sender=sender.address,
+    #     signer=sender2.signer,
+    #     sender=sender2.address,
     #     suggested_params=sp,
     # )
     # print()
-
     # print(
-    #     f"Step6: borrower {sender.address} repays the loan (interest {payed_interest}) and gets {asa} ASA back "
+    #     f"Step6: lender liquidates {sender2.address} and gets the collateral {asa} ASA"
     # )
+
+    action = "repay loan"
+    app_client.call(
+        repay_loan,
+        axfer=axfer,
+        asset=asa,
+        signer=sender.signer,
+        sender=sender.address,
+        suggested_params=sp,
+    )
+    print()
+
+    print(
+        f"Step6: borrower {sender.address} repays the loan (interest {payed_interest}) and gets {asa} ASA back "
+    )
     app_acct_info = algod_client.account_info(sender.address)
     print(
         f"Info: after {action} borrower {sender.address}",
