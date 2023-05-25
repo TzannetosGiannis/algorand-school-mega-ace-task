@@ -1,0 +1,640 @@
+#pragma version 8
+intcblock 0 1 4
+bytecblock 0x636f6c6c61746572616c5f6964 0x6c656e646572 0x616d6f756e74 0x7374617274 0x626f72726f77696e675f6964 0x6475726174696f6e 0x696e746572657374 0x
+txn NumAppArgs
+intc_0 // 0
+==
+bnz main_l18
+txna ApplicationArgs 0
+pushbytes 0x6a9567c5 // "opt_in_nft(asset)void"
+==
+bnz main_l17
+txna ApplicationArgs 0
+pushbytes 0xf45016a1 // "opt_in_borrower()void"
+==
+bnz main_l16
+txna ApplicationArgs 0
+pushbytes 0xae01dd33 // "request_loan(axfer,uint64,uint64,uint64,uint64)void"
+==
+bnz main_l15
+txna ApplicationArgs 0
+pushbytes 0x71b95af5 // "delete_request(asset)void"
+==
+bnz main_l14
+txna ApplicationArgs 0
+pushbytes 0xb730ec3d // "repay_loan(axfer,asset)void"
+==
+bnz main_l13
+txna ApplicationArgs 0
+pushbytes 0xb4a6933e // "accept_loan(account,axfer)void"
+==
+bnz main_l12
+txna ApplicationArgs 0
+pushbytes 0x32f0cb98 // "calculate_interest()uint64"
+==
+bnz main_l11
+txna ApplicationArgs 0
+pushbytes 0x06c9146a // "liquidate_loan(account,asset)void"
+==
+bnz main_l10
+err
+main_l10:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+callsub liquidateloancaster_17
+intc_1 // 1
+return
+main_l11:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+callsub calculateinterestcaster_16
+intc_1 // 1
+return
+main_l12:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+callsub acceptloancaster_15
+intc_1 // 1
+return
+main_l13:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+callsub repayloancaster_14
+intc_1 // 1
+return
+main_l14:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+callsub deleterequestcaster_13
+intc_1 // 1
+return
+main_l15:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+callsub requestloancaster_12
+intc_1 // 1
+return
+main_l16:
+txn OnCompletion
+intc_1 // OptIn
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+callsub optinborrowercaster_11
+intc_1 // 1
+return
+main_l17:
+txn OnCompletion
+intc_0 // NoOp
+==
+txn ApplicationID
+intc_0 // 0
+!=
+&&
+assert
+callsub optinnftcaster_10
+intc_1 // 1
+return
+main_l18:
+txn OnCompletion
+intc_0 // NoOp
+==
+bnz main_l20
+err
+main_l20:
+txn ApplicationID
+intc_0 // 0
+==
+assert
+intc_1 // 1
+return
+
+// opt_in_nft
+optinnft_0:
+proto 1 0
+itxn_begin
+intc_2 // axfer
+itxn_field TypeEnum
+frame_dig -1
+txnas Assets
+itxn_field XferAsset
+global CurrentApplicationAddress
+itxn_field AssetReceiver
+intc_0 // 0
+itxn_field AssetAmount
+intc_0 // 0
+itxn_field Fee
+itxn_submit
+retsub
+
+// opt_in_borrower
+optinborrower_1:
+proto 0 0
+txn Sender
+bytec_2 // "amount"
+intc_0 // 0
+app_local_put
+txn Sender
+bytec 4 // "borrowing_id"
+intc_0 // 0
+app_local_put
+txn Sender
+bytec_0 // "collateral_id"
+intc_0 // 0
+app_local_put
+txn Sender
+bytec 5 // "duration"
+intc_0 // 0
+app_local_put
+txn Sender
+bytec 6 // "interest"
+intc_0 // 0
+app_local_put
+txn Sender
+bytec_1 // "lender"
+bytec 7 // ""
+app_local_put
+txn Sender
+bytec_3 // "start"
+intc_0 // 0
+app_local_put
+retsub
+
+// request_loan
+requestloan_2:
+proto 5 0
+txn Sender
+bytec_0 // "collateral_id"
+app_local_get
+intc_0 // 0
+==
+assert
+frame_dig -5
+gtxns AssetReceiver
+global CurrentApplicationAddress
+==
+assert
+frame_dig -5
+gtxns AssetAmount
+intc_1 // 1
+==
+assert
+txn Sender
+bytec 4 // "borrowing_id"
+frame_dig -4
+app_local_put
+txn Sender
+bytec_2 // "amount"
+frame_dig -3
+app_local_put
+txn Sender
+bytec 5 // "duration"
+frame_dig -2
+app_local_put
+txn Sender
+bytec 6 // "interest"
+frame_dig -1
+app_local_put
+txn Sender
+bytec_0 // "collateral_id"
+frame_dig -5
+gtxns XferAsset
+app_local_put
+retsub
+
+// delete_request
+deleterequest_3:
+proto 1 0
+txn Sender
+global CurrentApplicationID
+app_opted_in
+assert
+txn Sender
+bytec_1 // "lender"
+app_local_get
+bytec 7 // ""
+==
+assert
+itxn_begin
+intc_2 // axfer
+itxn_field TypeEnum
+txn Sender
+bytec_0 // "collateral_id"
+app_local_get
+itxn_field XferAsset
+txn Sender
+itxn_field AssetReceiver
+intc_1 // 1
+itxn_field AssetAmount
+intc_0 // 0
+itxn_field Fee
+itxn_submit
+callsub clearState_4
+retsub
+
+// clearState
+clearState_4:
+proto 0 0
+txn Sender
+bytec_2 // "amount"
+intc_0 // 0
+app_local_put
+txn Sender
+bytec 4 // "borrowing_id"
+intc_0 // 0
+app_local_put
+txn Sender
+bytec_0 // "collateral_id"
+intc_0 // 0
+app_local_put
+txn Sender
+bytec 5 // "duration"
+intc_0 // 0
+app_local_put
+txn Sender
+bytec 6 // "interest"
+intc_0 // 0
+app_local_put
+txn Sender
+bytec_3 // "start"
+intc_0 // 0
+app_local_put
+txn Sender
+bytec_1 // "lender"
+bytec 7 // ""
+app_local_put
+retsub
+
+// calculateInterest
+calculateInterest_5:
+proto 0 1
+txn Sender
+bytec_2 // "amount"
+app_local_get
+global LatestTimestamp
+txn Sender
+bytec_3 // "start"
+app_local_get
+-
+*
+pushint 31556926 // 31556926
+/
+txn Sender
+bytec 6 // "interest"
+app_local_get
+*
+retsub
+
+// repay_loan
+repayloan_6:
+proto 2 0
+frame_dig -2
+gtxns AssetReceiver
+txn Sender
+bytec_1 // "lender"
+app_local_get
+==
+assert
+frame_dig -2
+gtxns AssetAmount
+txn Sender
+bytec_2 // "amount"
+app_local_get
+callsub calculateInterest_5
++
+>=
+assert
+frame_dig -2
+gtxns XferAsset
+txn Sender
+bytec 4 // "borrowing_id"
+app_local_get
+==
+assert
+itxn_begin
+intc_2 // axfer
+itxn_field TypeEnum
+txn Sender
+bytec_0 // "collateral_id"
+app_local_get
+itxn_field XferAsset
+txn Sender
+itxn_field AssetReceiver
+intc_1 // 1
+itxn_field AssetAmount
+intc_0 // 0
+itxn_field Fee
+itxn_submit
+callsub clearState_4
+retsub
+
+// accept_loan
+acceptloan_7:
+proto 2 0
+frame_dig -2
+txnas Accounts
+global CurrentApplicationID
+app_opted_in
+assert
+frame_dig -2
+txnas Accounts
+bytec_1 // "lender"
+app_local_get
+bytec 7 // ""
+==
+assert
+frame_dig -1
+gtxns AssetReceiver
+frame_dig -2
+txnas Accounts
+==
+assert
+frame_dig -1
+gtxns AssetAmount
+frame_dig -2
+txnas Accounts
+bytec_2 // "amount"
+app_local_get
+==
+assert
+frame_dig -2
+txnas Accounts
+bytec_1 // "lender"
+txn Sender
+app_local_put
+frame_dig -2
+txnas Accounts
+bytec_3 // "start"
+global LatestTimestamp
+app_local_put
+retsub
+
+// calculate_interest
+calculateinterest_8:
+proto 0 1
+intc_0 // 0
+callsub calculateInterest_5
+frame_bury 0
+retsub
+
+// liquidate_loan
+liquidateloan_9:
+proto 2 0
+frame_dig -2
+txnas Accounts
+global CurrentApplicationID
+app_opted_in
+assert
+frame_dig -2
+txnas Accounts
+bytec_3 // "start"
+app_local_get
+frame_dig -2
+txnas Accounts
+bytec 5 // "duration"
+app_local_get
++
+global LatestTimestamp
+<
+bnz liquidateloan_9_l2
+intc_1 // 1
+return
+liquidateloan_9_l2:
+frame_dig -2
+txnas Accounts
+bytec_1 // "lender"
+app_local_get
+txn Sender
+==
+assert
+itxn_begin
+intc_2 // axfer
+itxn_field TypeEnum
+frame_dig -2
+txnas Accounts
+bytec_0 // "collateral_id"
+app_local_get
+itxn_field XferAsset
+txn Sender
+itxn_field AssetReceiver
+intc_1 // 1
+itxn_field AssetAmount
+intc_0 // 0
+itxn_field Fee
+itxn_submit
+frame_dig -2
+txnas Accounts
+bytec_2 // "amount"
+intc_0 // 0
+app_local_put
+frame_dig -2
+txnas Accounts
+bytec 4 // "borrowing_id"
+intc_0 // 0
+app_local_put
+frame_dig -2
+txnas Accounts
+bytec_0 // "collateral_id"
+intc_0 // 0
+app_local_put
+frame_dig -2
+txnas Accounts
+bytec 5 // "duration"
+intc_0 // 0
+app_local_put
+frame_dig -2
+txnas Accounts
+bytec 6 // "interest"
+intc_0 // 0
+app_local_put
+frame_dig -2
+txnas Accounts
+bytec_3 // "start"
+intc_0 // 0
+app_local_put
+frame_dig -2
+txnas Accounts
+bytec_1 // "lender"
+bytec 7 // ""
+app_local_put
+retsub
+
+// opt_in_nft_caster
+optinnftcaster_10:
+proto 0 0
+intc_0 // 0
+txna ApplicationArgs 1
+intc_0 // 0
+getbyte
+frame_bury 0
+frame_dig 0
+callsub optinnft_0
+retsub
+
+// opt_in_borrower_caster
+optinborrowercaster_11:
+proto 0 0
+callsub optinborrower_1
+retsub
+
+// request_loan_caster
+requestloancaster_12:
+proto 0 0
+intc_0 // 0
+dupn 4
+txna ApplicationArgs 1
+btoi
+frame_bury 1
+txna ApplicationArgs 2
+btoi
+frame_bury 2
+txna ApplicationArgs 3
+btoi
+frame_bury 3
+txna ApplicationArgs 4
+btoi
+frame_bury 4
+txn GroupIndex
+intc_1 // 1
+-
+frame_bury 0
+frame_dig 0
+gtxns TypeEnum
+intc_2 // axfer
+==
+assert
+frame_dig 0
+frame_dig 1
+frame_dig 2
+frame_dig 3
+frame_dig 4
+callsub requestloan_2
+retsub
+
+// delete_request_caster
+deleterequestcaster_13:
+proto 0 0
+intc_0 // 0
+txna ApplicationArgs 1
+intc_0 // 0
+getbyte
+frame_bury 0
+frame_dig 0
+callsub deleterequest_3
+retsub
+
+// repay_loan_caster
+repayloancaster_14:
+proto 0 0
+intc_0 // 0
+dup
+txna ApplicationArgs 1
+intc_0 // 0
+getbyte
+frame_bury 1
+txn GroupIndex
+intc_1 // 1
+-
+frame_bury 0
+frame_dig 0
+gtxns TypeEnum
+intc_2 // axfer
+==
+assert
+frame_dig 0
+frame_dig 1
+callsub repayloan_6
+retsub
+
+// accept_loan_caster
+acceptloancaster_15:
+proto 0 0
+intc_0 // 0
+dup
+txna ApplicationArgs 1
+intc_0 // 0
+getbyte
+frame_bury 0
+txn GroupIndex
+intc_1 // 1
+-
+frame_bury 1
+frame_dig 1
+gtxns TypeEnum
+intc_2 // axfer
+==
+assert
+frame_dig 0
+frame_dig 1
+callsub acceptloan_7
+retsub
+
+// calculate_interest_caster
+calculateinterestcaster_16:
+proto 0 0
+intc_0 // 0
+callsub calculateinterest_8
+frame_bury 0
+pushbytes 0x151f7c75 // 0x151f7c75
+frame_dig 0
+itob
+concat
+log
+retsub
+
+// liquidate_loan_caster
+liquidateloancaster_17:
+proto 0 0
+intc_0 // 0
+dup
+txna ApplicationArgs 1
+intc_0 // 0
+getbyte
+frame_bury 0
+txna ApplicationArgs 2
+intc_0 // 0
+getbyte
+frame_bury 1
+frame_dig 0
+frame_dig 1
+callsub liquidateloan_9
+retsub

@@ -1,0 +1,120 @@
+{
+    "name": "NFTasCollateral",
+    "methods": [
+        {
+            "name": "opt_in_nft",
+            "args": [
+                {
+                    "type": "asset",
+                    "name": "axfer"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            }
+        },
+        {
+            "name": "opt_in_borrower",
+            "args": [],
+            "returns": {
+                "type": "void"
+            }
+        },
+        {
+            "name": "request_loan",
+            "args": [
+                {
+                    "type": "axfer",
+                    "name": "axfer"
+                },
+                {
+                    "type": "uint64",
+                    "name": "request_token"
+                },
+                {
+                    "type": "uint64",
+                    "name": "quantity"
+                },
+                {
+                    "type": "uint64",
+                    "name": "duration"
+                },
+                {
+                    "type": "uint64",
+                    "name": "interest"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            }
+        },
+        {
+            "name": "delete_request",
+            "args": [
+                {
+                    "type": "asset",
+                    "name": "asset"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            }
+        },
+        {
+            "name": "repay_loan",
+            "args": [
+                {
+                    "type": "axfer",
+                    "name": "axfer"
+                },
+                {
+                    "type": "asset",
+                    "name": "asset"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            }
+        },
+        {
+            "name": "accept_loan",
+            "args": [
+                {
+                    "type": "account",
+                    "name": "borrower"
+                },
+                {
+                    "type": "axfer",
+                    "name": "axfer"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            }
+        },
+        {
+            "name": "calculate_interest",
+            "args": [],
+            "returns": {
+                "type": "uint64"
+            }
+        },
+        {
+            "name": "liquidate_loan",
+            "args": [
+                {
+                    "type": "account",
+                    "name": "address"
+                },
+                {
+                    "type": "asset",
+                    "name": "asset"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            }
+        }
+    ],
+    "networks": {}
+}
