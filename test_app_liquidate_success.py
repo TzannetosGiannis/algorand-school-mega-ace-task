@@ -156,7 +156,7 @@ def request_loan():
     global sp
     global loan_duration
     global initial_amount
-    loan_duration = 1000
+    loan_duration = 1
     request_amount = 10
     interest = 1
 
@@ -224,38 +224,13 @@ def accept_loan():
 
 
 @pytest.fixture(scope="module")
-def repay_loan(scope="module"):
-    global payed_interest
-
-    payed_interest = 200
-    axfer = TransactionWithSigner(
-        txn=transaction.AssetTransferTxn(
-            sender=borrower.address,
-            receiver=lender.address,
-            index=asa2,
-            amt=request_amount + payed_interest,
-            sp=app_client.get_suggested_params(),
-        ),
-        signer=borrower.signer,
-    )
+def liquidate_loan():
     app_client.call(
-        "repay_loan",
-        axfer=axfer,
+        liquidate_loan,
+        address=borrower.address,
         asset=asa,
-        signer=borrower.signer,
-        sender=borrower.address,
-        suggested_params=sp,
-    )
-    pass
-
-
-@pytest.fixture(scope="module")
-def delete_request():
-    app_client.call(
-        "delete_request",
-        sender=borrower.address,
-        signer=borrower.signer,
-        asset=asa,
+        signer=lender.signer,
+        sender=lender.address,
         suggested_params=sp,
     )
 
@@ -376,28 +351,6 @@ def test_request_loan2(create_app, opt_in, opt_in_nft, request_loan):
 
 
 #####################
-# delete_request tests
-#####################
-
-
-# @pytest.mark.delete_request
-# def test_delete_request1(create_app, opt_in, opt_in_nft, request_loan, delete_request):
-#     assert app_client.get_local_state(borrower.address)["lender"] == ""
-
-
-# @pytest.mark.delete_request
-# def test_delete_request2(create_app, opt_in, opt_in_nft, request_loan, delete_request):
-#     app_acct_info = algod_client.account_info(borrower.address)
-#     asset = (
-#         str(app_acct_info["assets"][-2]["asset-id"])
-#         + "_"
-#         + str(app_acct_info["assets"][-2]["amount"])
-#     )
-
-#     assert asset == str(asa) + "_" + str(1)
-
-
-#####################
 # accept_loan tests
 #####################
 
@@ -426,48 +379,25 @@ def test_accept_loan(create_app, opt_in, opt_in_nft, request_loan, accept_loan):
 
 
 #####################
-# repay_loan tests
+# liquidate_loan tests
 #####################
 
 
-# @pytest.mark.repay_loan
-# def test_repay_loan(
-#     create_app, opt_in, opt_in_nft, request_loan, accept_loan, repay_loan
-# ):
-#     app_acct_info = algod_client.account_info(borrower.address)
-#     asset = (
-#         str(app_acct_info["assets"][-2]["asset-id"])
-#         + "_"
-#         + str(app_acct_info["assets"][-2]["amount"])
-#     )
-#     assert asset == str(asa) + "_" + str(1)
+@pytest.mark.liquidate_loan
+def test_liquidate(
+    create_app, opt_in, opt_in_nft, request_loan, accept_loan, liquidate_loan
+):
+    assert app_client.get_local_state(borrower.address)["amount"] == 0
 
 
-# @pytest.mark.repay_loan
-# def test_repay_loan1(
-#     create_app, opt_in, opt_in_nft, request_loan, accept_loan, repay_loan
-# ):
-#     app_acct_info = algod_client.account_info(borrower.address)
-#     asset = (
-#         str(app_acct_info["assets"][-1]["asset-id"])
-#         + "_"
-#         + str(app_acct_info["assets"][-1]["amount"])
-#     )
-#     assert asset == str(asa2) + "_" + str(initial_amount - payed_interest)
-
-
-# @pytest.mark.repay_loan
-# def test_repay_loan2(
-#     create_app, opt_in, opt_in_nft, request_loan, accept_loan, repay_loan
-# ):
-#     app_acct_info = algod_client.account_info(borrower.address)["assets"][-1]["amount"]
-#     app_acct_info2 = algod_client.account_info(lender.address)["assets"][-1]["amount"]
-
-#     assert asa2_supply == app_acct_info + app_acct_info2
-
-
-# @pytest.mark.repay_loan
-# def test_repay_loan3(
-#     create_app, opt_in, opt_in_nft, request_loan, accept_loan, repay_loan
-# ):
-#     assert app_client.get_local_state(borrower.address)["amount"] == 0
+@pytest.mark.liquidate_loan
+def test_liquidate2(
+    create_app, opt_in, opt_in_nft, request_loan, accept_loan, liquidate_loan
+):
+    app_acct_info = algod_client.account_info(lender.address)
+    asset = (
+        str(app_acct_info["assets"][-2]["asset-id"])
+        + "_"
+        + str(app_acct_info["assets"][-2]["amount"])
+    )
+    assert asset == str(asa) + "_" + str(1)
